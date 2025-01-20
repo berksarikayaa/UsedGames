@@ -2,7 +2,7 @@
 //  UsedGamesApp.swift
 //  UsedGames
 //
-//  Created by Buket Bayhan on 20.01.2025.
+//  Created by Berk Sarikaya on 20.01.2025.
 //
 
 import SwiftUI

@@ -2,60 +2,51 @@
 //  ContentView.swift
 //  UsedGames
 //
-//  Created by Buket Bayhan on 20.01.2025.
+//  Created by Berk Sarikaya on 20.01.2025.
 //
 
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    
+    let numberFormatter: NumberFormatter =
+    {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencySymbol = "$"
+        formatter.currencyCode = "USD"
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 2
+        return formatter
+    }()
+    
+    
+    let gameStore = GameStore()
+    
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
+        List(gameStore.games) { (game) in
+            HStack{
+                VStack(alignment: .leading, spacing: 4.0) {
+                    Text(game.name)
+                        .font(.body)
+                    Text(game.serialNumber)
+                        .font(.caption)
+                        .foregroundColor(Color(white: 0.65))
                 }
-                .onDelete(perform: deleteItems)
+                Spacer()
+                Text(NSNumber(value: game.priceInDollars), formatter: numberFormatter)
+                    .font(.title2)
+                    .foregroundColor(game.priceInDollars > 30 ? .blue : .gray)
+                
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-        } detail: {
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
+            .padding(.vertical, 6)
         }
     }
 }
 
-#Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
 }
