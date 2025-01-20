@@ -10,15 +10,48 @@ import SwiftData
 
 struct ContentView: View {
     
-
+    @ObservedObject var gameStore = GameStore()
     
-    
-    let gameStore = GameStore()
+    @State var gameToDelete: Game?
     
     var body: some View {
-        List(gameStore.games) { (game) in
-            GameListItem(game: game)
+        List{
+            Color.white.frame(width: nil , height: 44, alignment: .center)
+            ForEach(gameStore.games) { (game) in
+                GameListItem(game: game)
+            }
+            .onDelete(perform: {indexSet in self.gameToDelete = gameStore.game(at: indexSet)
+            })
+            .onMove(perform: {indices, newOffset in gameStore.move(indices: indices, to: newOffset)
+            })
         }
+        .animation(.easeIn)
+        .overlay(
+            VStack {
+                HStack {
+                    EditButton()
+                    Spacer()
+                    Button(action: {gameStore.createGame()} , label: {Text("Add")}).buttonStyle(BorderlessButtonStyle())
+                }
+                .padding()
+                .background(
+                    Color.white
+                        .edgesIgnoringSafeArea(.top))
+                Spacer()
+            }
+        ).actionSheet(item:$gameToDelete) {(game) -> ActionSheet in
+            ActionSheet(title: Text("Are you sure?"), message: Text("You will delete\(game.name)"), buttons: [.cancel(),
+                                                                                                              .destructive(Text("Delete"),
+                                                                                                                           action: {
+                if let indexSet = gameStore.indexSet(for:game){
+                    gameStore.delete(at: indexSet)
+                }
+                
+            })
+            ])
+            
+        }
+        
     }
 }
 
@@ -46,6 +79,7 @@ struct GameListItem: View {
             Text(NSNumber(value: game.priceInDollars), formatter: numberFormatter)
                 .font(.title2)
                 .foregroundColor(game.priceInDollars > 30 ? .blue : .gray)
+                .animation(nil)
             
         }
         .padding(.vertical, 6)
