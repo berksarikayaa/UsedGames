@@ -15,43 +15,37 @@ struct ContentView: View {
     @State var gameToDelete: Game?
     
     var body: some View {
-        List{
-            Color.white.frame(width: nil , height: 44, alignment: .center)
-            ForEach(gameStore.games) { (game) in
-                GameListItem(game: game)
-            }
-            .onDelete(perform: {indexSet in self.gameToDelete = gameStore.game(at: indexSet)
-            })
-            .onMove(perform: {indices, newOffset in gameStore.move(indices: indices, to: newOffset)
-            })
-        }
-        .animation(.easeIn)
-        .overlay(
-            VStack {
-                HStack {
-                    EditButton()
-                    Spacer()
-                    Button(action: {gameStore.createGame()} , label: {Text("Add")}).buttonStyle(BorderlessButtonStyle())
+        NavigationView {
+            List{
+                ForEach(gameStore.games) { (game) in
+                    NavigationLink(destination: Text(game.name)){GameListItem(game: game)
+                    }
                 }
-                .padding()
-                .background(
-                    Color.white
-                        .edgesIgnoringSafeArea(.top))
-                Spacer()
+                .onDelete(perform: {indexSet in self.gameToDelete = gameStore.game(at: indexSet)
+                })
+                .onMove(perform: {indices, newOffset in gameStore.move(indices: indices, to: newOffset)
+                })
             }
-        ).actionSheet(item:$gameToDelete) {(game) -> ActionSheet in
-            ActionSheet(title: Text("Are you sure?"), message: Text("You will delete\(game.name)"), buttons: [.cancel(),
-                                                                                                              .destructive(Text("Delete"),
-                                                                                                                           action: {
-                if let indexSet = gameStore.indexSet(for:game){
-                    gameStore.delete(at: indexSet)
-                }
-                
-            })
-            ])
-            
+            .listStyle(PlainListStyle())
+            .navigationTitle("UsedGames")
+            .navigationBarItems(leading: EditButton(),
+                                 trailing: Button(action: {gameStore.createGame()} ,label: {Text("Add")}))
+            .navigationBarTitleDisplayMode(.large)
+            .animation(.easeIn)
+            .actionSheet(item:$gameToDelete) {(game) -> ActionSheet in
+                ActionSheet(title: Text("Are you sure?"), message: Text("You will delete\(game.name)"),
+                            buttons: [.cancel(),
+                                      .destructive(Text("Delete"),
+                                                   action: {
+                    if let indexSet = gameStore.indexSet(for:game){
+                        gameStore.delete(at: indexSet)
+                    }
+                    
+                })
+                            ])
+            }
         }
-        
+        .accentColor(.purple)
     }
 }
 
@@ -61,27 +55,4 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 
-struct GameListItem: View {
-    
-    var game: Game
-    var numberFormatter: NumberFormatter = Formatters.dollarFormatter
-    
-    var body: some View {
-        HStack{
-            VStack(alignment: .leading, spacing: 4.0) {
-                Text(game.name)
-                    .font(.body)
-                Text(game.serialNumber)
-                    .font(.caption)
-                    .foregroundColor(Color(white: 0.65))
-            }
-            Spacer()
-            Text(NSNumber(value: game.priceInDollars), formatter: numberFormatter)
-                .font(.title2)
-                .foregroundColor(game.priceInDollars > 30 ? .blue : .gray)
-                .animation(nil)
-            
-        }
-        .padding(.vertical, 6)
-    }
-}
+
